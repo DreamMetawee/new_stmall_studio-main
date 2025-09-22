@@ -1,0 +1,413 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  createur  String   @db.VarChar(255)
+  updateur  String?  @db.VarChar(255)
+  created   DateTime @default(now()) @db.DateTime(0)
+  updated   DateTime @default(now()) @db.DateTime(0)
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  nickname  String?  @db.VarChar(255)
+  jobposi   String   @default("member") @db.VarChar(20)
+  usercode  String?  @unique(map: "usercode") @db.VarChar(100)
+  password  String?  @db.VarChar(100)
+  telephone String?  @db.VarChar(50)
+  userpic   String?  @db.VarChar(255)
+  status    Boolean  @default(true)
+}
+
+model category {
+  createur    String        @db.VarChar(255)
+  updateur    String?       @db.VarChar(255)
+  created     DateTime?     @db.DateTime(0)
+  updated     DateTime?     @db.DateTime(0)
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  slugname    String        @db.VarChar(255)
+  icon        String        @db.VarChar(100)
+  catalog     catalog[]
+  categorysub categorysub[]
+}
+
+model categorysub {
+  createur        String?           @db.VarChar(100)
+  updateur        String?           @db.VarChar(100)
+  created         DateTime?         @default(now()) @db.DateTime(0)
+  updated         DateTime?         @default(now()) @db.DateTime(0)
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(255)
+  slugname        String            @db.VarChar(255)
+  category_id     Int
+  category        category          @relation(fields: [category_id], references: [id])
+  types           type[]
+  dcbsSubCategory dcbsSubCategory[]
+
+  @@index([category_id], map: "categorysub_category_id_fkey")
+}
+
+model type {
+  createur       String?     @db.VarChar(100)
+  updateur       String?     @db.VarChar(100)
+  created        DateTime?   @default(now()) @db.DateTime(0)
+  updated        DateTime?   @default(now()) @db.DateTime(0)
+  id             Int         @id @default(autoincrement())
+  name           String      @db.VarChar(255)
+  slugname       String      @db.VarChar(255)
+  categorysub_id Int
+  products       products[]
+  categorysub    categorysub @relation(fields: [categorysub_id], references: [id])
+
+  @@index([categorysub_id], map: "type_categorysub_id_fkey")
+}
+
+model brand {
+  createur          String     @db.VarChar(255)
+  updateur          String?    @db.VarChar(255)
+  created           DateTime   @default(now()) @db.DateTime(0)
+  updated           DateTime   @default(now()) @db.DateTime(0)
+  id                Int        @id @default(autoincrement())
+  name              String     @db.VarChar(255)
+  slugname          String     @db.VarChar(255)
+  logo_url          String     @db.VarChar(255)
+  brand_description String?    @db.Text
+  website_link      String?    @db.VarChar(255)
+  status            Boolean    @default(true)
+  products          products[]
+}
+
+model products {
+  createur      String            @db.VarChar(255)
+  updateur      String?           @db.VarChar(255)
+  created       DateTime          @default(now()) @db.DateTime(0)
+  updated       DateTime          @default(now()) @db.DateTime(0)
+  id            Int               @id @default(autoincrement())
+  name          String            @db.VarChar(255)
+  slugname      String            @db.VarChar(255)
+  unitname      String?           @db.VarChar(255)
+  type_id       Int
+  brand_id      Int
+  description   String?           @db.Text
+  price         Decimal           @db.Decimal(10, 2)
+  regular_price Decimal?          @db.Decimal(10, 2)
+  currency      String?           @default("บาท") @db.VarChar(10)
+  weight        Float?            @default(0.00)
+  size          String?           @db.VarChar(100)
+  image_url     String?           @db.VarChar(255)
+  product_link  String?           @db.VarChar(255)
+  product_type  ProductType       @default(TYPE_1)
+  status        Boolean           @default(true)
+  brand         brand             @relation(fields: [brand_id], references: [id])
+  type          type              @relation(fields: [type_id], references: [id])
+  visitors      productVisitors[]
+
+  @@index([brand_id], map: "products_brand_id_fkey")
+  @@index([type_id], map: "products_type_id_fkey")
+}
+
+model productVisitors {
+  created    DateTime @default(now()) @db.DateTime(0)
+  id         Int      @id @default(autoincrement())
+  product_id Int
+
+  product products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model catalog {
+  id           Int      @id @default(autoincrement())
+  name         String?  @db.VarChar(100)
+  slugname     String   @db.VarChar(255)
+  catalog_link String?  @db.VarChar(255)
+  catalog_img  String?  @db.VarChar(255)
+  category_id  Int?
+  status       Boolean  @default(true)
+  createur     String   @db.VarChar(255)
+  updateur     String?  @db.VarChar(255)
+  created      DateTime @default(now()) @db.DateTime(0)
+  updated      DateTime @default(now()) @db.DateTime(0)
+
+  category      category?      @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "catalog_ibfk_1")
+  catelogImages catalogImage[]
+
+  @@index([category_id], map: "category_id")
+}
+
+model catalogImage {
+  id        Int      @id @default(autoincrement())
+  catalogId Int
+  image     String   @db.VarChar(255)
+  createur  String   @db.VarChar(255)
+  updateur  String?  @db.VarChar(255)
+  created   DateTime @default(now()) @db.DateTime(0)
+  updated   DateTime @default(now()) @db.DateTime(0)
+
+  catalog catalog @relation(fields: [catalogId], references: [id])
+}
+
+model decoByStyles {
+  createur        String?           @db.VarChar(100)
+  updateur        String?           @db.VarChar(100)
+  created         DateTime          @default(now()) @db.DateTime(0)
+  updated         DateTime          @default(now()) @db.DateTime(0)
+  id              Int               @id @default(autoincrement())
+  image           String            @db.VarChar(255)
+  name            String?           @db.VarChar(255)
+  slugname        String            @db.VarChar(255)
+  dcbsSubCategory dcbsSubCategory[]
+}
+
+model dcbsSubCategory {
+  createur       String?      @db.VarChar(100)
+  updateur       String?      @db.VarChar(100)
+  created        DateTime     @default(now()) @db.DateTime(0)
+  updated        DateTime     @default(now()) @db.DateTime(0)
+  id             Int          @id @default(autoincrement())
+  image          String       @db.VarChar(255)
+  subCategoryId  Int
+  decoByStylesId Int
+  decoByStyles   decoByStyles @relation(fields: [decoByStylesId], references: [id])
+  subCategory    categorysub  @relation(fields: [subCategoryId], references: [id])
+
+  @@index([decoByStylesId], map: "dcbsSubCategory_decoByStylesId_fkey")
+  @@index([subCategoryId], map: "dcbsSubCategory_subCategoryId_fkey")
+}
+
+model payment {
+  id           Int      @id @default(autoincrement())
+  custname     String   @db.VarChar(100)
+  telephone    String   @db.VarChar(20)
+  email        String   @db.VarChar(100)
+  order_number String   @db.VarChar(50)
+  payment_date DateTime @db.Date
+  payment_time DateTime @db.Time(0)
+  payment_img  String?  @db.VarChar(100)
+  amount       Decimal  @db.Decimal(10, 2)
+  remark       String?  @db.Text
+  status       Boolean  @default(true)
+}
+
+model productshero {
+  createur    String   @db.VarChar(255)
+  updateur    String?  @db.VarChar(255)
+  created     DateTime @default(now()) @db.DateTime(0)
+  updated     DateTime @default(now()) @db.DateTime(0)
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  slugname    String   @db.VarChar(255)
+  image_url   String   @db.VarChar(255)
+  description String?  @db.Text
+  discount    Decimal? @default(0.00) @db.Decimal(5, 2)
+  link        String   @db.VarChar(255)
+  status      Boolean  @default(true)
+}
+
+model sliders {
+  createur    String   @db.VarChar(255)
+  updateur    String?  @db.VarChar(255)
+  created     DateTime @default(now()) @db.DateTime(0)
+  updated     DateTime @default(now()) @db.DateTime(0)
+  id          Int      @id @default(autoincrement())
+  image_url   String   @db.VarChar(255)
+  title       String?  @db.VarChar(255)
+  description String?  @db.Text
+  link        String?  @db.VarChar(255)
+  status      Boolean  @default(true)
+}
+
+model about_us {
+  createur            String?  @db.VarChar(100)
+  updateur            String?  @db.VarChar(100)
+  created             DateTime @default(now())
+  updated             DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  hero_image          String?  @db.VarChar(50)
+  our_vision          String   @default("our_vision") @db.VarChar(1000)
+  our_mission         String   @default("our_mission") @db.VarChar(1000)
+  record_title        String   @default("record_title") @db.VarChar(255)
+  record_subtitle     String   @default("record_subtitle") @db.VarChar(1000)
+  record_image_1st    String?  @db.VarChar(50)
+  record_image_2nd    String?  @db.VarChar(50)
+  record_image_3rd    String?  @db.VarChar(50)
+  record_image_4th    String?  @db.VarChar(50)
+  record_image_5th    String?  @db.VarChar(50)
+  record_image_6th    String?  @db.VarChar(50)
+  business_title      String   @default("business_title") @db.VarChar(255)
+  business_content    String   @default("business_description") @db.VarChar(1000)
+  contact_image       String?  @db.VarChar(50)
+  contact_name        String   @default("contact_name") @db.VarChar(255)
+  sub_contact_name    String   @default("sub_contact_name") @db.VarChar(255)
+  contact_description String   @default("contact_description") @db.Text
+  contact_position    String   @default("contact_position") @db.VarChar(255)
+  contact_phone       String   @default("contact_phone") @db.VarChar(255)
+  contact_mobile      String   @default("contact_mobile") @db.VarChar(255)
+  contact_email       String   @default("contact_email") @db.VarChar(255)
+  contact_hour        String   @default("contact_hour") @db.VarChar(255)
+  contact_line        String   @default("contact_line") @db.VarChar(255)
+  contact_facebook    String   @default("contact_facebook") @db.VarChar(255)
+  contact_website     String   @default("contact_website") @db.VarChar(255)
+  contact_google_map  String   @default("contact_google_map") @db.VarChar(1000)
+}
+
+model business_groups {
+  createur    String?   @db.VarChar(100)
+  updateur    String?   @db.VarChar(100)
+  created     DateTime? @db.DateTime(0)
+  updated     DateTime? @db.DateTime(0)
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  logo_path   String?   @db.VarChar(255)
+  website_url String?   @db.VarChar(255)
+}
+
+model team_members {
+  createur    String?   @db.VarChar(100)
+  updateur    String?   @db.VarChar(100)
+  created     DateTime? @db.DateTime(0)
+  updated     DateTime? @db.DateTime(0)
+  order_step  Int       @default(1)
+  id          Int       @id @default(autoincrement())
+  name        String?   @db.VarChar(255)
+  position    String?   @db.VarChar(255)
+  description String?   @db.Text
+  image_path  String?   @db.VarChar(255)
+}
+
+model customer_testimonials {
+  createur            String?   @db.VarChar(100)
+  updateur            String?   @db.VarChar(100)
+  created             DateTime? @db.DateTime(0)
+  updated             DateTime? @db.DateTime(0)
+  id                  Int       @id @default(autoincrement())
+  customer_name       String?   @db.VarChar(255)
+  position_or_company String?   @db.VarChar(255)
+  testimonial         String?   @db.Text
+  photo_path          String?   @db.VarChar(255)
+  rating              Int?
+}
+
+model contact_sales {
+  createur String?   @db.VarChar(100)
+  updateur String?   @db.VarChar(100)
+  created  DateTime? @db.DateTime(0)
+  updated  DateTime? @db.DateTime(0)
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(255)
+  email    String?   @db.VarChar(255)
+  phone    String?   @db.VarChar(50)
+  subject  String?   @db.VarChar(255)
+  message  String?   @db.Text
+}
+
+model our_stores {
+  createur      String?   @db.VarChar(100)
+  updateur      String?   @db.VarChar(100)
+  created       DateTime? @db.DateTime(0)
+  updated       DateTime? @db.DateTime(0)
+  id            Int       @id @default(autoincrement())
+  image         String    @db.VarChar(255)
+  name          String    @db.VarChar(255)
+  slugname      String    @db.VarChar(255)
+  address       String?   @db.Text
+  phone         String?   @db.VarChar(50)
+  email         String?   @db.VarChar(100)
+  opening_hours String?   @db.VarChar(255)
+  map_embed     String?   @db.Text
+}
+
+model service_categories {
+  createur      String?         @db.VarChar(100)
+  updateur      String?         @db.VarChar(100)
+  created       DateTime?       @db.DateTime(0)
+  updated       DateTime?       @db.DateTime(0)
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(255)
+  slugname      String          @db.VarChar(255)
+  description   String?         @db.Text
+  image_path    String?         @db.VarChar(255)
+  service_items service_items[]
+}
+
+model service_items {
+  createur           String?            @db.VarChar(100)
+  updateur           String?            @db.VarChar(100)
+  created            DateTime?          @db.DateTime(0)
+  updated            DateTime?          @db.DateTime(0)
+  id                 Int                @id @default(autoincrement())
+  category_id        Int
+  name               String             @db.VarChar(255)
+  slugname           String             @db.VarChar(255)
+  description        String?            @db.Text
+  image_path         String?            @db.VarChar(255)
+  service_categories service_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@index([category_id], map: "service_items_category_id_fkey")
+}
+
+model policy {
+  id                    Int      @id @default(autoincrement())
+  cookie_title          String?  @db.VarChar(255)
+  cookie_content        String?  @db.Text
+  delivery_term_title   String?  @db.VarChar(255)
+  privacy_title         String?  @db.VarChar(255)
+  exchange_title        String?  @db.VarChar(255)
+  condition_title       String?  @db.VarChar(255)
+  cctv_title            String?  @db.VarChar(255)
+  privacy_content       String?  @db.Text
+  exchange_content      String?  @db.Text
+  condition_content     String?  @db.Text
+  cctv_content          String?  @db.Text
+  delivery_term_content String?  @db.Text
+  type                  String   @db.VarChar(255)
+  createur              String?  @db.VarChar(255)
+  updateur              String?  @db.VarChar(255)
+  created               DateTime @default(now()) @db.DateTime(0)
+  updated               DateTime @default(now()) @db.DateTime(0)
+}
+
+model howto_order {
+  id          Int      @id @default(autoincrement())
+  order_step  Int      @default(1)
+  name        String   @db.VarChar(255)
+  sub_name    String?  @db.VarChar(255)
+  description String?  @db.Text
+  image       String?  @db.VarChar(255)
+  createur    String?  @db.VarChar(255)
+  updateur    String?  @db.VarChar(255)
+  created     DateTime @default(now()) @db.DateTime(0)
+  updated     DateTime @default(now()) @db.DateTime(0)
+}
+
+model faq {
+  id       Int      @id @default(autoincrement())
+  question String   @db.VarChar(255)
+  answer   String   @db.Text
+  createur String?  @db.VarChar(255)
+  updateur String?  @db.VarChar(255)
+  created  DateTime @default(now()) @db.DateTime(0)
+  updated  DateTime @default(now()) @db.DateTime(0)
+}
+
+model projects {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  image       String?  @db.VarChar(255)
+  createur    String?  @db.VarChar(255)
+  updateur    String?  @db.VarChar(255)
+  created     DateTime @default(now()) @db.DateTime(0)
+  updated     DateTime @default(now()) @db.DateTime(0)
+}
+
+enum ProductType {
+  TYPE_1 // ใหม่
+  TYPE_2 // ขายดี
+  TYPE_3 // แนะนำ
+  TYPE_4 // ทั่วไป
+  TYPE_5 // โปรโมชั่น
+}
